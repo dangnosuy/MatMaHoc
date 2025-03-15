@@ -1,0 +1,7 @@
+Average Encrypt: 
+- 2KB: 210.023 microseconds
+- 2MB: 190898 microseconds
+- 100KB: 9262.53 microseconds = 9.26253 miliseconds = 0.00926253 seconds
+- 10KB: 962.973 microseconds
+- 500KB: 47103.9 microseconds
+- 5MB: 
