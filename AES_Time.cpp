@@ -75,7 +75,8 @@ pair<SecByteBlock, SecByteBlock> Key_Generation(string mode)
     prng.GenerateBlock(iv, iv.size());
     return make_pair(key, iv);
 }
-string UInt32ToString(uint32_t n) {
+string UInt32ToString(uint32_t n)
+{
     string s(4, '\0');
     s[0] = (n >> 24) & 0xFF;
     s[1] = (n >> 16) & 0xFF;
@@ -85,7 +86,8 @@ string UInt32ToString(uint32_t n) {
 }
 
 // Hàm chuyển chuỗi 4 byte thành uint32_t
-uint32_t StringToUInt32(const string &s) {
+uint32_t StringToUInt32(const string &s)
+{
     if (s.size() < 4)
         throw runtime_error("Invalid length for uint32 conversion");
     return (static_cast<uint32_t>(static_cast<unsigned char>(s[0])) << 24) |
@@ -100,7 +102,7 @@ string Encrypt(const string &mode, const SecByteBlock &key, const SecByteBlock &
     string cipher;
     try
     {
-        
+
         if (mode == "ECB")
         {
             ECB_Mode<AES>::Encryption e;
@@ -170,12 +172,9 @@ string Encrypt(const string &mode, const SecByteBlock &key, const SecByteBlock &
 // Hàm giải mã
 string Decrypt(const string &mode, const SecByteBlock &key, const SecByteBlock &iv, string &cipher)
 {
-    
-    string recovered; 
-    
+    string recovered;
     try
     {
-        auto start = std::chrono::high_resolution_clock::now();   
         if (mode == "ECB")
         {
             ECB_Mode<AES>::Decryption d;
@@ -212,13 +211,12 @@ string Decrypt(const string &mode, const SecByteBlock &key, const SecByteBlock &
             d.SetKeyWithIV(key, key.size(), iv, iv.size());
             AuthenticatedDecryptionFilter df(d, new StringSink(recovered));
             StringSource ss2(cipher, true, new Redirector(df));
-
         }
-        else if (mode == "XTS") {
+        else if (mode == "XTS")
+        {
             XTS_Mode<AES>::Decryption d;
             d.SetKeyWithIV(key, key.size(), iv);
-            StringSource(cipher, true, new StreamTransformationFilter(d, new StringSink(recovered))
-            );
+            StringSource(cipher, true, new StreamTransformationFilter(d, new StringSink(recovered)));
         }
         else if (mode == "CCM")
         {
@@ -232,12 +230,11 @@ string Decrypt(const string &mode, const SecByteBlock &key, const SecByteBlock &
             AuthenticatedDecryptionFilter df(d, new StringSink(recovered));
             StringSource ss2(cipher, true,
                              new Redirector(df));
-
         }
     }
     catch (const Exception &)
     {
-        cerr << "Decryption failed! Invalid ciphertext." << endl;
+        cerr << "Decryption failed! Invalid" << endl;
         return "";
     }
     return recovered;
@@ -311,7 +308,7 @@ int main()
         StringSource ssIV(iv_hex, true,
                           new HexDecoder(new ArraySink(iv, iv.size())));
         keyFile.close();
-        string plain, cipher;
+        string plain;
         plain = InputText();
         auto totalDuration = std::chrono::duration<double, std::micro>::zero();
         for (int i = 0; i < 10000; i++)
@@ -326,7 +323,6 @@ int main()
     }
     else if (action == 2) // Giải mã
     {
-        int a;
         string key_hex, iv_hex, cipher_hex;
         ifstream keyFile("key_iv.txt");
         getline(keyFile, key_hex);
@@ -334,27 +330,28 @@ int main()
         keyFile.close();
         cipher_hex = InputText();
         string decoded;
-        
         SecByteBlock key((mode == "XTS") ? AES::DEFAULT_KEYLENGTH * 2 : AES::DEFAULT_KEYLENGTH);
         StringSource ssKey(key_hex, true,
                            new HexDecoder(new ArraySink(key, key.size())));
         SecByteBlock iv(iv_hex.size() / 2);
         StringSource ssIV(iv_hex, true,
                           new HexDecoder(new ArraySink(iv, iv.size())));
-        
-        string recovered = Decrypt(mode, key, iv, decoded);
+
+        string recovered;
         auto totalDuration = std::chrono::duration<double, std::micro>::zero();
         for (int i = 0; i < 10000; i++)
         {
             auto start = std::chrono::high_resolution_clock::now();
-            StringSource(cipher_hex, true, new HexDecoder(new StringSink(decoded)));
-            Decrypt(mode, key, iv, decoded); // hoặc Encrypt_DES_MODE_IV(plaintext, mode);
+            string tempCipherHex = cipher_hex;
+            // Làm mới chuỗi decoded
+            string decoded;
+            // Chuyển từ hex về dạng nhị phân
+            StringSource(tempCipherHex, true, new HexDecoder(new StringSink(decoded)));
             auto end = std::chrono::high_resolution_clock::now();
             totalDuration += (end - start);
         }
         double avgTimeMicro = totalDuration.count() / 10000.0;
         std::cout << "Average encryption time: " << avgTimeMicro << " microseconds" << std::endl;
-        
     }
     return 0;
 }

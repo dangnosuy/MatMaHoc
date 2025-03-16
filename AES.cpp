@@ -248,6 +248,52 @@ string Decrypt(const string &mode, const SecByteBlock &key, const SecByteBlock &
     }
     return recovered;
 }
+std::string InputText()
+{
+    std::string text;
+    int choose = 0;
+    while (choose <= 0 || choose > 2)
+    {
+        std::cout << "Input plaintext/ciphertext from screen (1) or file (2): ";
+        std::cin >> choose;
+        switch (choose)
+        {
+        case 1:
+            std::cout << "Plaintext/Ciphertext: ";
+            std::cin.ignore();
+            getline(std::cin, text);
+            return text;
+        case 2:
+        {
+            std::cout << "Import file name: ";
+            std::string filename;
+            std::cin >> filename;
+
+            std::ifstream inFile(filename);
+
+            if (!inFile)
+            {
+                std::cout << "Cannot open file! Check your file name!\n"
+                          << std::endl;
+                continue;
+            }
+
+            std::string line;
+            while (std::getline(inFile, line))
+            {
+                text += line + "\n";
+            }
+
+            inFile.close();
+            return text;
+        }
+        default:
+            std::cout << "Choose is not valid! Try again.\n";
+            break;
+        }
+    }
+    return "";
+}
 
 int main()
 {
@@ -298,7 +344,7 @@ int main()
         }
         else if (a == 2)
         {
-            ifstream outputFile("output.txt");
+            ifstream outputFile("2kb_encrypt.txt");
             getline(outputFile, cipher_hex);
         }
         string decoded;

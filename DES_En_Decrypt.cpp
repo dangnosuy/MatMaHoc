@@ -6,7 +6,6 @@
 #include <tuple>
 #include <locale>
 #include <bitset>
-#include <chrono>
 
 #include "cryptopp/des.h"
 #include "cryptopp/osrng.h"
@@ -22,6 +21,7 @@
 // using namespace std;
 
 using namespace CryptoPP;
+
 // Hàm chuyển đổi SecByteBlock thành chuỗi hex để hiển thị
 std::string SecByteBlockToHex(const SecByteBlock &block)
 {
@@ -89,63 +89,42 @@ std::pair<SecByteBlock, SecByteBlock> Key_Generation()
     }
     return key_iv;
 }
-void WriteDecryptToFile(std::string result1)
-{
+void WriteDecryptToFile(std::string result1) {
     std::string filename;
-    std::cout << "Enter filename to save decrypt/encrypt text: ";
+    std::cout << "Enter filename to save decrypt text: ";
     std::cin >> filename;
 
     std::ofstream outFile(filename);
-    if (!outFile)
-    {
+    if (!outFile) {
         std::cerr << "Can't not open file " << filename << "\n";
     }
     outFile << result1;
     outFile.close();
     std::cout << "Result has saved in " << filename << "\n";
 }
-void WriteEncryptToFile(std::string result1, std::string result2, std::string result3)
-{
+void WriteEncryptToFile(std::string result1, std::string result2, std::string result3) {
     std::string filename;
     std::cout << "Enter filename to save encrypt text: ";
     std::cin >> filename;
 
     std::ofstream outFile(filename);
-    if (!outFile)
-    {
+    if (!outFile) {
         std::cerr << "Can't not open file " << filename << "\n";
     }
-    outFile << result1 << std::endl
-            << result2 << std::endl
-            << result3;
+    outFile << result1 << std::endl << result2 << std::endl << result3;
     outFile.close();
     std::cout << "Result has saved in " << filename << "\n";
 }
-SecByteBlock key(DES_EDE2::DEFAULT_KEYLENGTH);
-std::string keyHex = "26412CDDDC7094E4555827CBDFB34C31";
-std::string ivHex = "8E8E42E27DC33C5D";
-StringSource ssKey(keyHex, true, new HexDecoder(new ArraySink(key, key.size())));
-    // Đưa cả iv về SetByteBlock không sao, vì SecByteBlock nó bao gồm cả biến Bytes thì phải?
-SecByteBlock iv(DES_EDE2::BLOCKSIZE);
-StringSource ssIV(ivHex, true, new HexDecoder(new ArraySink(iv, iv.size())));
-
 
 void Encrypt_DES_MODE_EBC(std::string &plaintext)
 {
-
     std::pair<SecByteBlock, SecByteBlock> key_iv;
-    // key_iv = Key_Generation();
-    
-    key_iv.first = key;
-    // Đưa cả iv về SetByteBlock không sao, vì SecByteBlock nó bao gồm cả biến Bytes thì phải?
-    SecByteBlock iv(DES_EDE2::BLOCKSIZE);
-    StringSource ssIV(ivHex, true, new HexDecoder(new ArraySink(iv, iv.size())));
+    key_iv = Key_Generation();
 
-    key_iv.second = iv;
     std::string cipher, encoded;
     try
     {
-        // std::cout << "Plain text: " << plaintext << std::endl;
+        //std::cout << "Plain text: " << plaintext << std::endl;
 
         ECB_Mode<DES_EDE2>::Encryption e;
         e.SetKey(key_iv.first, key_iv.first.size());
@@ -161,53 +140,45 @@ void Encrypt_DES_MODE_EBC(std::string &plaintext)
                          new StringSink(encoded)) // HexEncoder
     );
 
+    SecByteBlock iv(0x00, DES_EDE2::BLOCKSIZE);
     std::string binaryStr = "", base64Str, binaryDecode;
     StringSource ss(encoded, true, new HexDecoder(new StringSink(binaryDecode))); // chuyen doi hex - > binary
     StringSource ss1(binaryDecode, true, new Base64Encoder(new StringSink(base64Str)));
-
-    for (unsigned char c : binaryDecode)
-    {
+    
+    
+    
+    for (unsigned char c : binaryDecode) {
         binaryStr += std::bitset<8>(c).to_string();
     }
-    //WriteDecryptToFile(encoded);
-    // std::cout << "Cipher text: " << encoded << std::endl;
-    // std::cout << "Cipher text (Binary): " << binaryStr << std::endl;
-    // std::cout << "Cipher text (Base64): " << base64Str << std::endl;
-    // std::cout << "Key (Hex): " << SecByteBlockToHex(key_iv.first) << std::endl;
+    WriteDecryptToFile(encoded);
 }
 void Encrypt_DES_MODE_IV(std::string &plaintext, int mode)
 {
-
     std::pair<SecByteBlock, SecByteBlock> key_iv;
-    // key_iv = Key_Generation();
-    key_iv.first = key;
-    key_iv.second = iv;
+    key_iv = Key_Generation();
+
     std::string cipher, encoded;
     try
     {
-        // std::cout << "Plain text: " << plaintext << std::endl;
-        if (mode == 2)
-        {
+        //std::cout << "Plain text: " << plaintext << std::endl;
+        if (mode == 2) {
             CBC_Mode<DES_EDE2>::Encryption e;
             e.SetKeyWithIV(key_iv.first, key_iv.first.size(), key_iv.second);
 
             StringSource ss1(plaintext, true, new StreamTransformationFilter(e, new StringSink(cipher)));
         }
-        else if (mode == 3)
-        {
+        else if (mode == 3) {
             OFB_Mode<DES_EDE2>::Encryption e;
             e.SetKeyWithIV(key_iv.first, key_iv.first.size(), key_iv.second);
 
             StringSource ss1(plaintext, true, new StreamTransformationFilter(e, new StringSink(cipher)));
         }
-        else if (mode == 4)
-        {
+        else if (mode == 4) {
             CFB_Mode<DES_EDE2>::Encryption e;
             e.SetKeyWithIV(key_iv.first, key_iv.first.size(), key_iv.second);
             StringSource ss3(plaintext, true, new StreamTransformationFilter(e, new StringSink(cipher)));
         }
-        else if (mode == 5)
-        {
+        else if (mode == 5) {
             CTR_Mode<DES_EDE2>::Encryption e;
             e.SetKeyWithIV(key_iv.first, key_iv.first.size(), key_iv.second);
             StringSource ss3(plaintext, true, new StreamTransformationFilter(e, new StringSink(cipher)));
@@ -221,30 +192,26 @@ void Encrypt_DES_MODE_IV(std::string &plaintext, int mode)
                      new HexEncoder(
                          new StringSink(encoded)) // HexEncoder
     );
-
     std::string binaryDecode, base64Str, binaryStr = "";
     StringSource ss(encoded, true, new HexDecoder(new StringSink(binaryDecode)));
     StringSource ss1(binaryDecode, true, new Base64Encoder(new StringSink(base64Str)));
-
-    //SecByteBlock iv(key_iv.second, DES_EDE2::BLOCKSIZE);
-    for (unsigned char c : binaryDecode)
-    {
+    
+    SecByteBlock iv(key_iv.second, DES_EDE2::BLOCKSIZE); 
+    for (unsigned char c : binaryDecode) {
         // std::bitset<8>(c) chuyển byte c thành chuỗi 8 bit
         binaryStr += std::bitset<8>(c).to_string();
     }
-    //WriteDecryptToFile(encoded);
-    // std::cout << "Cipher text (Hex): " << encoded << std::endl;
-    // std::cout << "Cipher text (Binary): " << binaryStr << std::endl;
-    // std::cout << "Cipher text (Base64): " << base64Str << std::endl;
-    // std::cout << "Key (Hex): " << SecByteBlockToHex(key_iv.first) << std::endl;
-    // std::cout << "IV (Hex): " << SecByteBlockToHex(iv) << std::endl;
+    WriteDecryptToFile(encoded);
+    
 }
+
 
 void Decrypt_DES_EBC_Mode(std::string ciphertext)
 {
+    std::cout << "This is Decrypt Mode, No Choose Random Key Option!\n";
     std::pair<SecByteBlock, SecByteBlock> key_iv;
-    key_iv.first = key;
-    key_iv.second = iv;
+    key_iv = Key_Generation();
+
     std::string rawCipher;
     StringSource ssCipher(ciphertext, true,
                           new HexDecoder(new StringSink(rawCipher)));
@@ -264,16 +231,20 @@ void Decrypt_DES_EBC_Mode(std::string ciphertext)
         exit(1);
     }
 
+    // StringSource xx(binaryDecode, true, new BaseN_Encoder(new StringSink(base64Decode)));
+    WriteDecryptToFile(decode_cipher);
+    SecByteBlock iv(0x00, DES_EDE2::BLOCKSIZE);
+    //std::cout << "Decrypt text : " << decode_cipher << std::endl;
+
+    // td::cout << "Decrypt text (Binary): " << decode_cipher << std::endl;
+    //std::cout << "Key (Hex): " << SecByteBlockToHex(key_iv.first) << std::endl;
 }
 void Decrypt_DES_Mode_IV(std::string ciphertext, int mode)
 {
-
+    std::cout << "This is Decrypt Mode, No Choose Random Key Option!\n";
     std::pair<SecByteBlock, SecByteBlock> key_iv;
-    // key_iv = Key_Generation();
-    key_iv.first = key;
-    // Đưa cả iv về SetByteBlock không sao, vì SecByteBlock nó bao gồm cả biến Bytes thì phải?
+    key_iv = Key_Generation();
 
-    key_iv.second = iv;
     std::string rawCipher;
     StringSource ssCipher(ciphertext, true,
                           new HexDecoder(new StringSink(rawCipher)));
@@ -281,37 +252,33 @@ void Decrypt_DES_Mode_IV(std::string ciphertext, int mode)
     std::string cipher, encoded, decode_cipher;
     try
     {
-        if (mode == 2)
-        {
+        if (mode == 2) {
             CBC_Mode<DES_EDE2>::Decryption d;
             d.SetKeyWithIV(key_iv.first, key_iv.first.size(), key_iv.second);
             StringSource ss3(rawCipher, true,
-                             new StreamTransformationFilter(d,
-                                                            new StringSink(decode_cipher)));
+                         new StreamTransformationFilter(d,
+                                                        new StringSink(decode_cipher)));
         }
-        else if (mode == 3)
-        {
+        else if (mode == 3) {
             OFB_Mode<DES_EDE2>::Decryption d;
             d.SetKeyWithIV(key_iv.first, key_iv.first.size(), key_iv.second);
             StringSource ss3(rawCipher, true,
-                             new StreamTransformationFilter(d,
-                                                            new StringSink(decode_cipher)));
+                         new StreamTransformationFilter(d,
+                                                        new StringSink(decode_cipher)));
         }
-        else if (mode == 4)
-        {
+        else if (mode == 4) {
             CFB_Mode<DES_EDE2>::Decryption d;
             d.SetKeyWithIV(key_iv.first, key_iv.first.size(), key_iv.second);
             StringSource ss3(rawCipher, true,
-                             new StreamTransformationFilter(d,
-                                                            new StringSink(decode_cipher)));
+                         new StreamTransformationFilter(d,
+                                                        new StringSink(decode_cipher)));
         }
-        else if (mode == 5)
-        {
+        else if (mode == 5) {
             CTR_Mode<DES_EDE2>::Decryption d;
             d.SetKeyWithIV(key_iv.first, key_iv.first.size(), key_iv.second);
             StringSource ss3(rawCipher, true,
-                             new StreamTransformationFilter(d,
-                                                            new StringSink(decode_cipher)));
+                         new StreamTransformationFilter(d,
+                                                        new StringSink(decode_cipher)));
         }
     }
     catch (const CryptoPP::Exception &e)
@@ -319,13 +286,8 @@ void Decrypt_DES_Mode_IV(std::string ciphertext, int mode)
         std::cout << e.what() << std::endl;
         exit(1);
     }
-    //WriteDecryptToFile(decode_cipher);
-
-    // StringSource xx(binaryDecode, true, new BaseN_Encoder(new StringSink(base64Decode)));
-    // std::cout << "Key (Hex): " << SecByteBlockToHex(key_iv.first) << std::endl;
-    // std::cout << "IV (Hex): " << SecByteBlockToHex(key_iv.second) << std::endl;
-    // SecByteBlock iv(0x00, DES_EDE2::BLOCKSIZE);
-    // std::cout << "Decrypt text : " << decode_cipher << std::endl;
+    WriteDecryptToFile(decode_cipher);
+    
 }
 
 std::string InputText()
@@ -379,87 +341,40 @@ void ChooseEncrypt(int mode)
 {
     std::string plaintext = InputText();
     if (mode == 1)
-    {
-        auto totalDuration = std::chrono::duration<double, std::micro>::zero();
-        for (int i = 0; i < 10000; i++)
-        {
-            auto start = std::chrono::high_resolution_clock::now();
-            Encrypt_DES_MODE_EBC(plaintext); // hoặc Encrypt_DES_MODE_IV(plaintext, mode);
-            auto end = std::chrono::high_resolution_clock::now();
-            totalDuration += (end - start);
-        }
-        double avgTimeMicro = totalDuration.count() / 10000.0;
-        std::cout << "Average encryption time: " << avgTimeMicro << " microseconds" << std::endl;
-    }
+        Encrypt_DES_MODE_EBC(plaintext);
     else
-    {
-        auto totalDuration = std::chrono::duration<double, std::micro>::zero();
-        for (int i = 0; i < 10000; i++)
-        {
-            auto start = std::chrono::high_resolution_clock::now();
-            Encrypt_DES_MODE_IV(plaintext, mode); // hoặc Encrypt_DES_MODE_IV(plaintext, mode);
-            auto end = std::chrono::high_resolution_clock::now();
-            totalDuration += (end - start);
-        }
-        double avgTimeMicro = totalDuration.count() / 10000.0;
-        std::cout << "Average encryption time: " << avgTimeMicro << " microseconds" << std::endl;
-    }
+        Encrypt_DES_MODE_IV(plaintext, mode);
+
 }
 
 void ChooseDecrypt(int mode)
 {
     std::string ciphertext = InputText();
-    if (mode == 1) {
-        auto totalDuration = std::chrono::duration<double, std::micro>::zero();
-        for (int i = 0; i < 10000; i++)
-        {
-            auto start = std::chrono::high_resolution_clock::now();
-            Decrypt_DES_EBC_Mode(ciphertext); // hoặc Encrypt_DES_MODE_IV(plaintext, mode);
-            auto end = std::chrono::high_resolution_clock::now();
-            totalDuration += (end - start);
-        }
-        double avgTimeMicro = totalDuration.count() / 10000.0;
-        std::cout << "Average encryption time: " << avgTimeMicro << " microseconds" << std::endl;
-    }
-    else {
-        auto totalDuration = std::chrono::duration<double, std::micro>::zero();
-        for (int i = 0; i < 10000; i++)
-        {
-            auto start = std::chrono::high_resolution_clock::now();
-            Decrypt_DES_Mode_IV(ciphertext, mode); // hoặc Encrypt_DES_MODE_IV(plaintext, mode);
-            auto end = std::chrono::high_resolution_clock::now();
-            totalDuration += (end - start);
-        }
-        double avgTimeMicro = totalDuration.count() / 10000.0;
-        std::cout << "Average encryption time: " << avgTimeMicro << " microseconds" << std::endl;
-    }
+    if (mode == 1)
+        Decrypt_DES_EBC_Mode(ciphertext);
+    else 
+        Decrypt_DES_Mode_IV(ciphertext, mode);
 }
 
 int main()
 {
 
     // Đặt locale cho toàn bộ chương trình
-    try
-    {
+    try {
         std::locale::global(std::locale("C.utf8"));
-    }
-    catch (const std::runtime_error &e)
-    {
+    } catch (const std::runtime_error& e) {
         std::cerr << "Can't not use C.utf8\n";
     }
 
     int choose = 0;
     int mode = 0;
-    while (choose <= 0 || choose > 2)
-    {
+    while (choose <= 0 || choose > 2) {
         std::cout << "Enter mode you choose: \n1. Encrypt\n2. Decrypt\n=> Your option: ";
         std::cin >> choose;
-        while (mode <= 0 || mode > 6)
-        {
+        while (mode <= 0 || mode > 6) {
             std::cout << "Enter mode encrypt/decrypt you want: \n1. EBC Mode\n2. CBC Mode\n3. OFB Mode\n4. CFB Mode\n5. CTR Mode\n=> Your option: ";
             std::cin >> mode;
-            if (mode <= 0 || mode > 6)
-            {
+            if (mode <= 0 || mode > 6) {
                 std::cout << "Your option is invalid! Try Again\n";
             }
         }
