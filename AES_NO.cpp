@@ -4,7 +4,11 @@
 #include <cstring>   // cho memcpy
 #include <iomanip>   // cho std::hex, std::setw
 #include <algorithm> // cho std::copy
+#include <string>
+#include <chrono>
+#include <fstream>
 
+using namespace std;
 class AES
 {
 public:
@@ -516,20 +520,55 @@ std::vector<unsigned char> hexStringToBytes(const std::string &hex)
     }
     return bytes;
 }
+string InputRow() {
+    int choices;
+    do {
+        cout << "Enter your type input:\n1. From screen\n2. From file\nChoices: ";
+        cin >> choices;
+        if (choices != 1 && choices != 2) {
+            cout << "Invalid choices| Try again!\n";
+        }
+    } while(choices != 1 && choices != 2);
+    string data;
+    switch (choices) {
+        case 1:
+            cout << "Enter to input: ";
+            cin.ignore();
+            getline(cin, data);
+            break;
+        case 2:
+            string filename;
+            cout << "Enter file name: ";
+            cin >> filename;
 
+            ifstream f(filename);
+
+            if (!f) {
+                std::cout << "Cannot open file! Check your file name!\n"
+                          << std::endl;
+                return "";
+            }    
+            std::string line;
+            while (getline(f, line))
+            {
+                data += line + "\n";
+            }
+
+            f.close();
+            break;
+    }
+    return data;
+}
 int main()
 {
     try
     {
         // 1) Nhập plaintext
-        std::cout << "Enter plaintext: ";
-        std::string plainStr;
-        std::getline(std::cin, plainStr);
+        cout << "Enter plaintext: ";
+        string plainStr = InputRow();
 
         // 2) Nhập Key 128-bit dưới dạng hex (32 ký tự hex)
-        std::cout << "Enter 128-bit key in hex (32 hex characters): ";
-        std::string keyHex;
-        std::getline(std::cin, keyHex);
+        std::string keyHex = "673AA6246ECD2322F62EF35851CD16DF";
         
         // Chuyển keyHex -> mảng 16 byte
         std::vector<unsigned char> key = hexStringToBytes(keyHex);
@@ -538,9 +577,8 @@ int main()
         }
 
         // 3) Nhập IV 128-bit dưới dạng hex (32 ký tự hex)
-        std::cout << "Enter 128-bit IV in hex (32 hex characters): ";
-        std::string ivHex;
-        std::getline(std::cin, ivHex);
+        std::string ivHex = "E08B1D8C711C65C3702959FE8C5FE25A";
+
 
         // Chuyển ivHex -> mảng 16 byte
         std::vector<unsigned char> iv = hexStringToBytes(ivHex);
@@ -550,23 +588,35 @@ int main()
 
         // 4) Chuyển plaintext sang vector unsigned char
         std::vector<unsigned char> plaintext(plainStr.begin(), plainStr.end());
-
-        // 5) Khởi tạo AES và mã hoá CBC
+        auto totalDuration = std::chrono::duration<double, std::micro>::zero();
         AES aes(key);
-        auto cipher = aes.cbc_encrypt(plaintext, iv);
-
-        // In ra ciphertext dưới dạng hex
-        std::cout << "Ciphertext (hex) = ";
-        for (auto c : cipher) {
-            std::cout << std::hex << std::setw(2) << std::setfill('0')
-                      << static_cast<int>(c);
+        std::vector<unsigned char> tmp;
+        // 5) Khởi tạo AES và mã hoá CBC
+        for (int i = 0; i < 1000; i++) {
+            auto start = std::chrono::high_resolution_clock::now();
+            auto cipher = aes.cbc_encrypt(plaintext, iv);
+            tmp = cipher;
+            auto end = std::chrono::high_resolution_clock::now();
+            totalDuration += (end - start);
         }
-        std::cout << std::dec << std::endl;
-
+        cout << "\nThoi gian trung binh cua ma hoa: " << totalDuration.count() / 1000 << "ms\n";
+        // In ra ciphertext dưới dạng hex
+        //std::cout << "Ciphertext (hex) = ";
+        //for (auto c : cipher) {
+          //  std::cout << std::hex << std::setw(2) << std::setfill('0')
+            //          << static_cast<int>(c);
+        //}
+        totalDuration = std::chrono::duration<double, std::micro>::zero();
         // 6) Giải mã lại để kiểm tra
-        auto decrypted = aes.cbc_decrypt(cipher);
-        std::string recovered(decrypted.begin(), decrypted.end());
-        std::cout << "Recovered plaintext = " << recovered << std::endl;
+        for (int i = 0; i < 1000; i++) {
+            auto start = std::chrono::high_resolution_clock::now();
+            auto decrypted = aes.cbc_decrypt(tmp);
+            std::string recovered(decrypted.begin(), decrypted.end());
+            auto end = std::chrono::high_resolution_clock::now();
+            totalDuration += (end - start);
+        }
+        cout << "Thoi gian giai ma trung binh: " << totalDuration.count() / 1000 << "ms\n";
+
     }
     catch(const std::exception &ex)
     {
