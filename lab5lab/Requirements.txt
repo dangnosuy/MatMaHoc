@@ -1,0 +1,39 @@
+
+LAB 5: Digital signature with CryptoPP/Openssl
+Required:
++) Algorithm: ECDSA, RSAPSS
++) Three module: key generation, signing and the verify functions (using command-line or GUI)
+1) Key generation
+  Publickey, Privae  Key;
+  Save to file s (ber, pem);
+2) signing function
+    - May adopt library or direct compute from formulas.
+    - Deploy directly from formulas will get 15/100 bonus points.
++) Message to sign
+    - Input from file or screen
+    - Support Vietnamese (using UTF-8)
++) secret key
+   - Input from file
+3) Verify function
++) Message and signature
+    - Input from files
+    - Support Vietnamese (using UTF-8)
++) public key key
+   - Input from file
+
+4) ECC curve:  should select from standard curves
++) Secret key/public key
+    - The keys load from files (for both two functions and arguments in C++/C# in terminal or GUI)
+    - The public key: >= 256 bits
++) OS platforms
+  - Your code can compile on both Windows and Linux;
+Report Lab 5
+Write your report in word file including:
+  1. Report your hardware resources;
+  2. Report computation performance on Windows and Linux (in table with capture image on running your program);
+    - Report computation performance for all operations on both Windows and Linux with different input size;
+    on average 1000 running times for hash function;
+     
+    - Summarize the results in a tables including: size of input, OS (Windows, Linux), operation time (sign, verify).
+    - Do a comparison and your comments on both input size and OS;
+

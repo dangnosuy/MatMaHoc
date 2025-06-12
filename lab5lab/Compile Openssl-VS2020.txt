@@ -1,0 +1,108 @@
+Build OpenSSL using Visual Studio 2017, 2019, 2021 (cl.exe)
+See guide: https://github.com/openssl/openssl/blob/master/NOTES-WINDOWS.md
+
+1. Setup Visual Studio (do not do this step if you have Visual Studio installed)
+https://visualstudio.microsoft.com/vs/older-downloads/
+
+2. Setup Prerequisites
+(see more at: https://github.com/openssl/openssl?tab=readme-ov-file#build-and-install)
+- Perl
+https://github.com/StrawberryPerl/Perl-Dist-Strawberry/releases/download/SP_5380_5361/strawberry-perl-5.38.0.1-64bit.msi
+- Netwide Assembler
+https://www.nasm.us/pub/nasm/releasebuilds/2.16.01/win64/nasm-2.16.01-installer-x64.exe
+(add path to Window Enviroment if needed)
+- Check the install: 
+where NASM
+where Perl
+where cl
+The results should return the path to exe file like this (may varu in your PC):
+C:\Strawberry\c\bin\nasm.exe
+C:\Strawberry\perl\bin\perl.exe
+C:\Program Files\Microsoft Visual Studio\2022\Professional\VC\Tools\MSVC\14.39.33519\bin\Hostx64\x64\cl.exe
+
+3.Download and extract openssl to openssl-3.3.2
+https://openssl.org/source/openssl-3.3.2.tar.gz
+
+Run "x64 Native Tools Command Prompt for VS 2022" in extracting openssl folder (openssl-3.2.1) and these comands:
++) Setting compiler
+C:\Strawberry\perl\bin\perl.exe Configure VC-WIN64A shared --prefix="D:\\Labs_Crypto\\Openssl350\\msvc" 
+
++) Compile and install
+nmake clean cl=/MP16
+set cl=/MP16 
+nmake cl=/MP16 
+//nmake test
+nmake install
+Note: 
+--prefix: the location you would like to copy library after compiling
+Should show full path for perl.exe to a void conflict
+C:\Strawberry\perl\bin\perl.exe
+
+4. Configure VS Code
++Config c_cpp_properties.json
+Press "Ctrl + Shift + P",
+Then search  and select: c_cpp_properties.json
+{
+    "configurations": [
+        {
+            "name": "Win32",
+            "includePath": [
+                "${workspaceFolder}/**",
+                "${workspaceFolder}/include"
+            ],
+            "defines": [
+                "_DEBUG",
+                "UNICODE",
+                "_UNICODE"
+            ],
+            "windowsSdkVersion": "10.0.22621.0",
+            "compilerPath": "cl.exe",
+            "cStandard": "c17",
+            "cppStandard": "c++17",
+            "intelliSenseMode": "windows-msvc-x64"
+        }
+    ],
+    "version": 4
+}
+
++ Config task.json
+Terminal --> Configure Tasks
+
+{
+	"version": "2.0.0",
+	"tasks": [
+		{
+			"type": "cppbuild",
+			"label": "C/C++: cl.exe build active file",
+			"command": "cl.exe",
+			"args": [
+				"/Zi",
+				"/EHsc",
+				"/nologo",
+				"/Fe${fileDirname}\\${fileBasenameNoExtension}.exe",
+				"${file}",
+				"/I", 
+				"${workspaceFolder}\\include",
+				"/link",
+				"${workspaceFolder}\\lib\\libcrypto.lib",
+				"${workspaceFolder}\\lib\\libssl.lib",
+
+			],
+			"options": {
+				"cwd": "${fileDirname}"
+			},
+			"problemMatcher": [
+				"$msCompile"
+			],
+			"group": "build",
+			"detail": "compiler: cl.exe"
+		}
+	]
+}
+
++Open VS code for C/C++ projects
+ - Open "x64 Native Tools Command Prompt for VS 2022" in "Run as Administrator"
+ - Change directory to your location C/C++ projects
+ - Run VS code: code .
+
+

@@ -1,0 +1,33 @@
+﻿
+0. Download Openssl
+https://github.com/openssl/openssl/releases/download/openssl-3.5.0/openssl-3.5.0.tar.gz
+and extract the gz file to obtain the source folder: openssl-3.2.1
+1. Compile Openssl using g++ with mingw64 (run on mingw64 terminal in openssl-3.3.2)
+- Check for sure that only one make program in your computer: 
+where make: the return should be one path to make.exe (ex:msys64\usr\bin\make.exe)
+- Config compiler:
+./Configure CC="/mingw64/bin/gcc" CXX="/mingw64/bin/g++" --prefix="D:/Labs_Crypto/openssl350/gcc"
+- Compile the library
+make clean -j 16
+make -j 16
+(optimal to your cpu threads)
+//make test -j 16
+make install -j 16
+notes:
+--prefix: location for install (copy) after compiling
+-j <number>: the number CPU threads for parallel processing
+
+2. Compile Openssl using clang/clang++ with mingw64 (run on mingw64 terminal in openssl-3.3.2)
+- Check for sure that only one make program in your computer: 
+where make: the return should be one path to make.exe (ex:msys64\usr\bin\make.exe)
+- Config compiler:
+make clean -j 16
+./Configure CC="/mingw64/bin/clang" CXX="/mingw64/bin/clang++" --prefix="D:/Labs_Crypto/openssl350/clang"
+- Compile the library
+make -j 16
+(optimal to your cpu threads)
+//make test -j 16
+make install -j 16
+notes:
+--prefix: location for install (copy) after compiling
+-j <number>: the number CPU threads for parallel processing

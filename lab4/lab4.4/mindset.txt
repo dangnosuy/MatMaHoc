@@ -1,0 +1,17 @@
+- Khi tấn công Length Extension Attack
+- Hacker sẽ sử dụng đúng cái đoạn hash ban đầu bao gồm key || message || padding 
+- Hacker phải có được độ dài của key (vì message là gửi luôn rồi để check, cái hash thường là chữ ký) để có thể tính được là đã hash đến đâu rồi và tiếp tục hash tiếp(thường là bội của 64)
+- Sau đó cập nhật các thông số (Đọc code) và tiếp tục hash từ vị trí sau đó tức là extension được thêm vô. Dựa vào các đoạn hash đằng trước
+- Cuối cùng ta sẽ có được kết quả là hash(key || message || padding || extension) 
+- Với hệ thông server khi check theo kiểu expected_hash(key + message) == received_hash =>> Chắc chắn bị tấn công
+    + Vì giả sử tôi gửi "toi la dang an cut" => hash (key + "toi la dang an cut") -> Gửi lên server server sẽ lấy hash (key + "toi la dang an cut") sẽ bằng cái kia
+    + Vì thế ta có thể tính tiếp khi ta add extension => hash (key + "toi la dang" + padding + "an cut") => Server sẽ hash(key + "toi la dang {padding} + an cut") => Giống nhau
+- Sử dụng HMAC để kiểm tra sẽ ngăn được việc này
+
+- Server kiểm tra thế này là lỗi
+def server_verify(msg: bytes, received_hash_hex: str) -> bool:
+    # Server tính hash = SHA256(key || msg)
+    m = hashlib.sha256()
+    m.update(secret_key + msg)
+    expected_hash = m.hexdigest()
+    return expected_hash == received_hash_hex

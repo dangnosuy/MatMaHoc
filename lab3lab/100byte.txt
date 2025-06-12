@@ -1,0 +1,1 @@
+This is a text file created to have exactly 100 bytes in size. It contains a string of characters th

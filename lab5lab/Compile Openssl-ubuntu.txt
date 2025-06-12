@@ -1,0 +1,12 @@
+5. Opensll library
+ Download and compile:
+	mkdir openssl
+	cd openssl
+	wget https://www.openssl.org/source/openssl-3.2.1.tar.gz
+	tar -xvzf openssl-3.2.1.tar.gz
+	cd openssl-3.2.1
+	./config --prefix="/home/ngoctu/Desktop/Openassl/openssl321" openssldir="/home/ngoctu/Desktop/Openassl/openssl321" 
+	sudo make -j 18
+	sudo make test -j 18
+	sudo make install -j 18
+Note: set your real path for --prefix, openssldir, -j <nums>, nums is your cpu threads
